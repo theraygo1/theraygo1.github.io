@@ -1,40 +1,514 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My Personal Website</title>
-  <style>
-    body {
-      background: #f0f4f8;
-      color: #222;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    h1 {
-      margin-top: 30px;
-      font-size: 2.5rem;
-    }
-    p {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-    }
-    img {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      object-fit: cover;
-      margin-bottom: 30px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wizard's Chess - Harry Potter Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #0b0c10;
+            --board-border: #2c221e;
+            --sq-light: #d4c39e;
+            --sq-dark: #3a2e2b;
+            --gold: #d4af37;
+            --accent-red: #740001;
+            --accent-green: #1a472a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #1b1c22 0%, #08080a 100%);
+            color: #e0e0e0;
+            font-family: 'Cinzel', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: #a0a0a0;
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .side-panel {
+            background: rgba(20, 20, 25, 0.8);
+            border: 2px solid var(--gold);
+            padding: 15px;
+            border-radius: 8px;
+            width: 180px;
+            min-height: 400px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        .side-panel h3 {
+            margin-top: 0;
+            color: var(--gold);
+            border-bottom: 1px solid var(--gold);
+            padding-bottom: 5px;
+            text-align: center;
+        }
+
+        .graveyard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            font-size: 2rem;
+            min-height: 100px;
+        }
+
+        .board-wrapper {
+            position: relative;
+            border: 12px solid var(--board-border);
+            border-radius: 6px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 65px);
+            grid-template-rows: repeat(8, 65px);
+            background-color: var(--sq-dark);
+        }
+
+        .square {
+            width: 65px;
+            height: 65px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.8rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .square.light {
+            background-color: var(--sq-light);
+            color: #111;
+        }
+
+        .square.dark {
+            background-color: var(--sq-dark);
+            color: #e0e0e0;
+        }
+
+        .square.selected {
+            background-color: #8a7335 !important;
+            box-shadow: inset 0 0 10px #ffea79;
+        }
+
+        .square.valid-move::after {
+            content: '';
+            width: 18px;
+            height: 18px;
+            background: rgba(212, 175, 55, 0.7);
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 8px var(--gold);
+        }
+
+        .square.valid-capture {
+            background-color: var(--accent-red) !important;
+        }
+
+        .piece {
+            transition: transform 0.2s ease, filter 0.2s;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.6));
+        }
+
+        .piece.white-piece {
+            color: #f0e6d2;
+            text-shadow: 0 0 3px #000;
+        }
+
+        .piece.black-piece {
+            color: #111;
+            text-shadow: 0 0 2px #fff;
+        }
+
+        .status-box {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: var(--gold);
+            text-align: center;
+            font-weight: bold;
+            height: 30px;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            font-family: 'Cinzel', serif;
+            background: var(--accent-red);
+            color: white;
+            border: 1px solid var(--gold);
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #900000;
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        /* Destroy Animation */
+        @keyframes smash {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.4) rotate(15deg); opacity: 0.8; filter: blur(1px); }
+            100% { transform: scale(0) rotate(-45deg); opacity: 0; }
+        }
+
+        .smash-anim {
+            animation: smash 0.5s forwards ease-in;
+        }
+    </style>
 </head>
 <body>
-  <h1>Welcome to My Website!</h1>
-  <p>This is my free site hosted with GitHub Pages.</p>
-  <img src="https://via.placeholder.com/200" alt="My Photo">
+
+    <h1>WIZARD'S CHESS</h1>
+    <div class="subtitle">"That's totally barbaric!" — "That's Wizard's Chess."</div>
+
+    <div class="game-container">
+        <!-- Left Side: Order of the Phoenix Graveyard -->
+        <div class="side-panel">
+            <h3>White Fallen</h3>
+            <div id="white-graveyard" class="graveyard"></div>
+        </div>
+
+        <!-- Center: Board -->
+        <div class="board-wrapper">
+            <div id="board"></div>
+        </div>
+
+        <!-- Right Side: Death Eaters Graveyard -->
+        <div class="side-panel">
+            <h3>Black Fallen</h3>
+            <div id="black-graveyard" class="graveyard"></div>
+        </div>
+    </div>
+
+    <div class="status-box" id="status">White's Turn (Gryffindor)</div>
+
+    <div class="controls">
+        <button onclick="resetGame()">Restart Match</button>
+    </div>
+
+    <script>
+        // Unicode representations for Wizard Chess pieces
+        const PIECES = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+        };
+
+        const initialBoard = [
+            ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+            ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+            ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+        ];
+
+        let boardState = [];
+        let selectedSquare = null;
+        let turn = 'white'; // 'white' or 'black'
+        let validMoves = [];
+
+        // Audio Effects using Web Audio API synthesis
+        function playSmashSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(120, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            
+            gain.gain.setValueAtTime(0.5, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        }
+
+        function playMoveSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.15);
+            
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.15);
+        }
+
+        function initBoard() {
+            boardState = JSON.parse(JSON.stringify(initialBoard));
+            turn = 'white';
+            selectedSquare = null;
+            document.getElementById('white-graveyard').innerHTML = '';
+            document.getElementById('black-graveyard').innerHTML = '';
+            updateStatus("White's Turn (Gryffindor)");
+            renderBoard();
+        }
+
+        function isWhite(piece) {
+            return piece && piece === piece.toUpperCase();
+        }
+
+        function isBlack(piece) {
+            return piece && piece === piece.toLowerCase();
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    const isLight = (r + c) % 2 === 0;
+                    square.className = `square ${isLight ? 'light' : 'dark'}`;
+                    square.dataset.row = r;
+                    square.dataset.col = c;
+
+                    const piece = boardState[r][c];
+                    if (piece) {
+                        const pieceEl = document.createElement('span');
+                        pieceEl.className = `piece ${isWhite(piece) ? 'white-piece' : 'black-piece'}`;
+                        pieceEl.innerText = PIECES[piece];
+                        square.appendChild(pieceEl);
+                    }
+
+                    if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
+                        square.classList.add('selected');
+                    }
+
+                    // Check if square is in valid moves
+                    const move = validMoves.find(m => m.r === r && m.c === c);
+                    if (move) {
+                        if (boardState[r][c] !== '') {
+                            square.classList.add('valid-capture');
+                        } else {
+                            square.classList.add('valid-move');
+                        }
+                    }
+
+                    square.addEventListener('click', () => handleSquareClick(r, c));
+                    boardEl.appendChild(square);
+                }
+            }
+        }
+
+        function handleSquareClick(r, c) {
+            const clickedPiece = boardState[r][c];
+
+            // If clicking on an already selected piece, deselect
+            if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
+                selectedSquare = null;
+                validMoves = [];
+                renderBoard();
+                return;
+            }
+
+            // If a valid destination square is clicked
+            if (selectedSquare) {
+                const move = validMoves.find(m => m.r === r && m.c === c);
+                if (move) {
+                    executeMove(selectedSquare, { r, c });
+                    return;
+                }
+            }
+
+            // Selecting a piece
+            if (clickedPiece) {
+                if ((turn === 'white' && isWhite(clickedPiece)) || (turn === 'black' && isBlack(clickedPiece))) {
+                    selectedSquare = { r, c };
+                    validMoves = getBasicMoves(r, c, clickedPiece);
+                    renderBoard();
+                }
+            }
+        }
+
+        function executeMove(from, to) {
+            const piece = boardState[from.r][from.c];
+            const targetPiece = boardState[to.r][to.c];
+
+            const targetSqEl = document.querySelector(`[data-row='${to.r}'][data-col='${to.c}'] .piece`);
+
+            if (targetPiece) {
+                // Capture / Destruction animation
+                playSmashSound();
+                if (targetSqEl) targetSqEl.classList.add('smash-anim');
+
+                setTimeout(() => {
+                    addToGraveyard(targetPiece);
+                    finalizeMove(from, to, piece);
+                }, 400);
+            } else {
+                playMoveSound();
+                finalizeMove(from, to, piece);
+            }
+        }
+
+        function finalizeMove(from, to, piece) {
+            boardState[to.r][to.c] = piece;
+            boardState[from.r][from.c] = '';
+
+            selectedSquare = null;
+            validMoves = [];
+
+            // Switch turn
+            turn = turn === 'white' ? 'black' : 'white';
+            updateStatus(turn === 'white' ? "White's Turn (Gryffindor)" : "Black's Turn (Slytherin)");
+
+            renderBoard();
+        }
+
+        function addToGraveyard(piece) {
+            const graveyardId = isWhite(piece) ? 'white-graveyard' : 'black-graveyard';
+            const el = document.createElement('span');
+            el.innerText = PIECES[piece];
+            document.getElementById(graveyardId).appendChild(el);
+        }
+
+        function updateStatus(msg) {
+            document.getElementById('status').innerText = msg;
+        }
+
+        // Basic Chess Move Calculations
+        function getBasicMoves(r, c, piece) {
+            const moves = [];
+            const type = piece.toLowerCase();
+            const isW = isWhite(piece);
+
+            const addMove = (nr, nc) => {
+                if (nr < 0 || nr > 7 || nc < 0 || nc > 7) return false; // Out of bounds
+                const target = boardState[nr][nc];
+                if (!target) {
+                    moves.push({ r: nr, c: nc });
+                    return true; // Keep scanning direction
+                }
+                if ((isW && isBlack(target)) || (!isW && isWhite(target))) {
+                    moves.push({ r: nr, c: nc }); // Capture enemy
+                }
+                return false; // Blocked
+            };
+
+            // Pawns
+            if (type === 'p') {
+                const dir = isW ? -1 : 1;
+                const startRow = isW ? 6 : 1;
+                
+                // Single step forward
+                if (r + dir >= 0 && r + dir <= 7 && boardState[r + dir][c] === '') {
+                    moves.push({ r: r + dir, c });
+                    // Double step from start
+                    if (r === startRow && boardState[r + 2 * dir][c] === '') {
+                        moves.push({ r: r + 2 * dir, c });
+                    }
+                }
+                // Captures
+                [-1, 1].forEach(dc => {
+                    let nr = r + dir, nc = c + dc;
+                    if (nr >= 0 && nr <= 7 && nc >= 0 && nc <= 7) {
+                        let target = boardState[nr][nc];
+                        if (target && ((isW && isBlack(target)) || (!isW && isWhite(target)))) {
+                            moves.push({ r: nr, c: nc });
+                        }
+                    }
+                });
+            }
+
+            // Knights
+            if (type === 'n') {
+                const offsets = [
+                    [-2,-1], [-2,1], [-1,-2], [-1,2],
+                    [1,-2], [1,2], [2,-1], [2,1]
+                ];
+                offsets.forEach(([dr, dc]) => addMove(r + dr, c + dc));
+            }
+
+            // King
+            if (type === 'k') {
+                const offsets = [
+                    [-1,-1], [-1,0], [-1,1],
+                    [0,-1],          [0,1],
+                    [1,-1],  [1,0],  [1,1]
+                ];
+                offsets.forEach(([dr, dc]) => addMove(r + dr, c + dc));
+            }
+
+            // Sliding Pieces (Rook, Bishop, Queen)
+            const ray = (dr, dc) => {
+                let nr = r + dr, nc = c + dc;
+                while (addMove(nr, nc)) {
+                    nr += dr;
+                    nc += dc;
+                }
+            };
+
+            if (type === 'r' || type === 'q') {
+                ray(1, 0); ray(-1, 0); ray(0, 1); ray(0, -1);
+            }
+            if (type === 'b' || type === 'q') {
+                ray(1, 1); ray(1, -1); ray(-1, 1); ray(-1, -1);
+            }
+
+            return moves;
+        }
+
+        function resetGame() {
+            initBoard();
+        }
+
+        // Initialize on load
+        initBoard();
+    </script>
 </body>
 </html>
